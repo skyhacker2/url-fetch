@@ -1,0 +1,19 @@
+{
+  "name": "url-fetch",
+  "version": "0.1.0",
+  "description": "Fetch the urls",
+  "keywords": [
+    "url",
+    "library"
+  ],
+  "repository": "git://github.com/skyhacker2/url-fetch.git",
+  "author": "Eleven Chen <skyhacker@126.com>",
+  "main": "index",
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "dependencies": {
+    "url-valid":"0.1.4"
+  },
+  "license": "MIT"
+}
