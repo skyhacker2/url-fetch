@@ -13,10 +13,11 @@
     "node": ">= 0.8.0"
   },
   "dependencies": {
-    "url-valid":"0.1.4",
+    "url-valid": "0.1.4",
     "bufferhelper": "0.2.0",
-    "iconv":"2.x",
-    "iconv-lite":"0.2.11"
+    "iconv": "2.x",
+    "iconv-lite": "0.2.11",
+    "redis": "~0.9.1"
   },
   "license": "MIT"
 }

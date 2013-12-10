@@ -1,0 +1,8 @@
+1 http://homes.yahoo.com/
+2 http://news.yahoo.com/
+3 http://www.yahoo.com/
+4 http://games.yahoo.com/
+5 http://finance.yahoo.com/
+6 http://sports.yahoo.com/
+7 http://weather.yahoo.com/
+8 http://screen.yahoo.com/

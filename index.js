@@ -2,7 +2,14 @@ var url_valid = require('url-valid')
 	, fs = require('fs')
 	, http = require('http')
   , BufferHelper = require('bufferhelper')
-  , iconv = require('iconv-lite');
+  , iconv = require('iconv-lite')
+  , redis = require('redis')
+  , client = redis.createClient();
+
+client.on("error", function (err) {
+  console.log(err);
+});
+client.flushall();
 
 var config = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
 var urlPattern = /[\"\'](http:\/\/(.*?))[\"\']/g;
@@ -12,30 +19,34 @@ var a = urlPattern.exec(ss);
 console.log (a);
 */
 var stack = [];
-var   = {};
+var exist = {};
 var encoding = {'utf-8':true,'gb2312':true,'iso-8859-1':true,'gbk':true};
-var stream = fs.createWriteStream("result2.txt");
+var stream = fs.createWriteStream("hao123.txt");
 var count = 0;
+var num = 0;
+var flag = 0;
 function markUrl(url) {
   stream.write((++count) + " " + url +"\n");
 }
 
 function printInfo(res) {
-  var memory = process.memoryUsage();
-  console.log(res.statusCode + "remain: " + stack.length + " heapTotal: " + memory.heapTotal + " heapUsed: " + memory.heapUsed + " " + Math.round(memory.heapUsed/memory.heapTotal*100) + "%");
+  client.llen('stack', function (err, reply) {
+    console.log('stack: ' + reply + " fetched: " + num + " successed: " + count);
+  });
 }
 
+
 function get(url) {
-  //console.log("fetch url: " + url);
+  client.set(url, "true");
+  num++;
+  flag++;
   var req = http.get(url, function(res) {
     printInfo(res);
     var charset = 'utf-8';
-    //console.log(res.headers);
     if (!res.headers['content-type']) {
       return;
     }
     else {
-      //console.log(res.headers['content-type']);
       var content_type = res.headers['content-type'].toLowerCase();
       if (content_type.indexOf('text/html') === -1)
         return ;
@@ -44,11 +55,7 @@ function get(url) {
         var index, c;
         if (arr[i].indexOf('charset') !== -1 && (index = arr[i].indexOf('=')) > 0) {
           charset = arr[i].substr(index+1);
-          //console.log('charset=' + charset);
-          //console.log(encoding[charset]);
-          if (encoding[charset])
-            break;
-          else
+          if (!encoding[charset])
             return;
         }
       }
@@ -56,7 +63,6 @@ function get(url) {
     }
 
     if (res.statusCode === 200) {
-      //console.log('mark url: ' +url);
       markUrl(url);
     }
 
@@ -69,35 +75,46 @@ function get(url) {
       var str = iconv.decode(buf, charset);
       var arr = [];
       while((arr = urlPattern.exec(str)) != null) {
-        if (!arr[1].match('[\.png|\.gif|\.css|\.js|\.dtd]$') && !exist[arr[1]]) {
-          //console.log('not exist');
-          stack.push(arr[1]);
-          exist[arr[1]] = true;
+        if (!arr[1].match('[\.png|\.gif|\.css|\.js|\.dtd]$')) {
+          (function(url) {
+            client.get(url, function (err, reply) {
+              if (!reply) {
+                client.rpush('stack', url);
+              }
+            });
+            client.set(url, "true");
+          })(arr[1]);
         }
       }
+      flag--;
     });
   }).on('error', function(err, msg) {
     console.log('error');
+    flag--;
     req.abort();
   });
   req.on('socket', function (socket) {
     socket.setTimeout(10000);  
     socket.on('timeout', function() {
-        console.log('timeout');
+      flag--;
+      console.log('timeout');
     });
   });
 }
-stack.push('http://hk.yahoo.com/?p=us');
+//stack.push('http://www.baidu.com/');
+//client.rpush('stack', 'http://homes.yahoo.com/');
+client.rpush('stack', 'http://www.hao123.com/');
+//client.rpush('stack', 'http://www.amazon.com/');
 
 function check() {
-  if (stack.length > 0)
-    get(stack.shift());
-  else
-    console.log("stack is empty.");
-  setTimeout(function() {
-    check();
-  }, 200);
-
+  client.lpop('stack', function (err, reply) {
+    if (reply) {
+      get(reply);
+    } else {
+      console.log('stack is empty');
+    }
+  });
+  setTimeout(check, 100);
 }
 
 check();
