@@ -6,12 +6,16 @@ var url_valid = require('url-valid')
   , redis = require('redis')
   , client = redis.createClient();
 
+if (process.argv.length != 4) {
+  console.log("Usage: node index.js seed-url file");
+  process.exit(1);
+}
+
 client.on("error", function (err) {
   console.log(err);
 });
 client.flushall();
 
-var config = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
 var urlPattern = /[\"\'](http:\/\/(.*?))[\"\']/g;
 /*
 var ss = '<a href=\'http://www.baidu.com?id=1212#hhh\'>';
@@ -21,12 +25,13 @@ console.log (a);
 var stack = [];
 var exist = {};
 var encoding = {'utf-8':true,'gb2312':true,'iso-8859-1':true,'gbk':true};
-var stream = fs.createWriteStream("hao123.txt");
+var stream = fs.createWriteStream(process.argv[3]);
 var count = 0;
 var num = 0;
 var flag = 0;
 function markUrl(url) {
-  stream.write((++count) + " " + url +"\n");
+  count++;
+  stream.write(url +"\n");
 }
 
 function printInfo(res) {
@@ -102,8 +107,8 @@ function get(url) {
   });
 }
 //stack.push('http://www.baidu.com/');
-//client.rpush('stack', 'http://homes.yahoo.com/');
-client.rpush('stack', 'http://www.hao123.com/');
+client.rpush('stack', process.argv[2]);
+//client.rpush('stack', 'http://www.hao123.com/');
 //client.rpush('stack', 'http://www.amazon.com/');
 
 function check() {
