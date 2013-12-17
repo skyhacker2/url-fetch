@@ -1,5 +1,4 @@
-var url_valid = require('url-valid')
-	, fs = require('fs')
+var fs = require('fs')
 	, http = require('http')
   , BufferHelper = require('bufferhelper')
   , iconv = require('iconv-lite')
@@ -17,18 +16,12 @@ client.on("error", function (err) {
 client.flushall();
 
 var urlPattern = /[\"\'](http:\/\/(.*?))[\"\']/g;
-/*
-var ss = '<a href=\'http://www.baidu.com?id=1212#hhh\'>';
-var a = urlPattern.exec(ss);
-console.log (a);
-*/
 var stack = [];
 var exist = {};
 var encoding = {'utf-8':true,'gb2312':true,'iso-8859-1':true,'gbk':true};
 var stream = fs.createWriteStream(process.argv[3]);
 var count = 0;
 var num = 0;
-var flag = 0;
 function markUrl(url) {
   count++;
   stream.write(url +"\n");
@@ -44,7 +37,6 @@ function printInfo(res) {
 function get(url) {
   client.set(url, "true");
   num++;
-  flag++;
   var req = http.get(url, function(res) {
     printInfo(res);
     var charset = 'utf-8';
@@ -91,25 +83,20 @@ function get(url) {
           })(arr[1]);
         }
       }
-      flag--;
     });
   }).on('error', function(err, msg) {
     console.log('error');
-    flag--;
     req.abort();
   });
   req.on('socket', function (socket) {
     socket.setTimeout(10000);  
     socket.on('timeout', function() {
-      flag--;
       console.log('timeout');
     });
   });
 }
-//stack.push('http://www.baidu.com/');
+
 client.rpush('stack', process.argv[2]);
-//client.rpush('stack', 'http://www.hao123.com/');
-//client.rpush('stack', 'http://www.amazon.com/');
 
 function check() {
   client.lpop('stack', function (err, reply) {
